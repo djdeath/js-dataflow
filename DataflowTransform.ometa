@@ -28,7 +28,7 @@ let ExtractNodesTransform = ometa(NullTransform) {
 };
 
 let SetNodesTransforms = ometa(NullTransform) {
-  name :n                                -> (this.isNode(n) ? [#node, n] : [#name, n]),
+  get :x                                 -> (this.isNode(x) ? [#node, x] : [#get, x]),
 };
 SetNodesTransforms.isNode = function(name) {
   return this._nodes[name] === true;
