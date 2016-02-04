@@ -1,0 +1,40 @@
+let NullTransform = ometa {
+  trans      = [:t apply(t):ans]         -> ans,
+
+  number   :n                            -> [#number, n],
+  string   :s                            -> [#string, s],
+  name     :s                            -> [#name, s],
+  regExpr  :x                            -> [#regExpr, x],
+  arr      trans*:xs                     -> [#arr].concat(xs),
+  unop     :op trans:x                   -> [#unop, x],
+  getp     trans:fd trans:x              -> [#getp, fd, x],
+  get      :x                            -> [#get, x],
+  binop    :op trans:x trans:y           -> [#binop, op, x, y],
+  condExpr trans:cond trans:t trans:e    -> [#condExpr, cond, t, e],
+
+  call     trans:fn trans*:args          -> [#call, fn].concat(args),
+  send     :msg trans:recv trans*:args   -> [#send, msg, recv].concat(args),
+  json     trans*:props                  -> [#json].concat(trans),
+  binding  :name trans:val               -> [#binding, name, val],
+
+  propagate :name trans:val :location    -> [#propagate, name, val, location],
+
+  program trans*:ts                      -> [#program].concat(ts),
+};
+
+let ExtractNodesTransform = ometa(NullTransform) {
+  propagate :name trans:val :location    -> { name: name, location: location },
+  program trans*:nodes                   -> nodes,
+};
+
+let SetNodesTransforms = ometa(NullTransform) {
+  name :n                                -> (this.isNode(n) ? [#node, n] : [#name, n]),
+};
+SetNodesTransforms.isNode = function(name) {
+  return this._nodes[name] === true;
+};
+SetNodesTransforms.setNodes = function(names) {
+  this._nodes = {};
+  for (let i = 0; i < names.length; i++)
+    this._nodes[names[i]] = true;
+};

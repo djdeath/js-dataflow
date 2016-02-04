@@ -1,0 +1,24 @@
+let JsGen  = ometa {
+  trans      = [:t apply(t):ans]         -> ans,
+
+  number   :n                            -> ('(' + n + ')'),
+  string   :s                            -> s.toProgramString(),
+  name     :s                            -> s,
+  regExpr  :x                            -> x,
+  arr      trans*:xs                     -> ('[' + xs.join(',') + ']'),
+  unop     :op trans:x                   -> ('(' + op + ' ' + x + ')'),
+  getp     trans:fd trans:x              -> (x + '[' + fd + ']'),
+  get      :x                            -> x,
+  binop    :op trans:x trans:y           -> ('(' + x + ' ' + op + ' ' + y + ')'),
+  condExpr trans:cond trans:t trans:e    -> ('(' + cond + '?' + t + ':' + e + ')'),
+
+
+  call     trans:fn trans*:args          -> (fn + '(' + args.join(',') + ')'),
+  send     :msg trans:recv trans*:args   -> (recv + '.' + msg + '(' + args.join(',') + ')'),
+  json     trans*:props                  -> ('({' + props.join(',') + '})'),
+  binding  :name trans:val               -> (name.toProgramString() + ': ' + val),
+
+  propagate :name trans:val              -> (name + '=' + val),
+
+  program trans*:xs                      -> ('{' + xs.join(';') + ';}'),
+};
