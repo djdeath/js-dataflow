@@ -1,24 +1,64 @@
-let JsGen  = ometa {
+let ExtractNodes = ometa {
+  trans      = [:t apply(t):ans]         -> ans,
+
+  number   :n                            -> [],
+  string   :s                            -> [],
+  regExpr  :x                            -> [],
+  arr      trans*:xs                     -> xs.reduce(function(a, b) { return a.concat(b); }),
+  unop     :op trans:x                   -> x,
+  getp     trans:fd trans:x              -> fd.concat(x),
+  get      :x                            -> x,
+  binop    :op trans:x trans:y           -> x.concat(y),
+  condExpr trans:cond trans:t trans:e    -> cond.concat(t).concat(e),
+
+  call     trans:fn trans*:args          -> args.reduce(function(a, b) { return a.concat(b); }),
+  send     :msg trans:recv trans*:args   -> trans.concat(args.reduce(function(a, b) { return a.concat(b); })),
+  json     trans*:props                  -> props.reduce(function(a, b) { return a.concat(b); }),
+  binding  :name trans:val               -> val,
+};
+
+let JsGen = ometa {
   trans      = [:t apply(t):ans]         -> ans,
 
   number   :n                            -> ('(' + n + ')'),
   string   :s                            -> s.toProgramString(),
-  name     :s                            -> s,
   regExpr  :x                            -> x,
   arr      trans*:xs                     -> ('[' + xs.join(',') + ']'),
   unop     :op trans:x                   -> ('(' + op + ' ' + x + ')'),
   getp     trans:fd trans:x              -> (x + '[' + fd + ']'),
-  get      :x                            -> x,
+  get      :x                            -> (this._isInput(x) ? 'values[' + x.toProgramString() + ']' : x),
   binop    :op trans:x trans:y           -> ('(' + x + ' ' + op + ' ' + y + ')'),
   condExpr trans:cond trans:t trans:e    -> ('(' + cond + '?' + t + ':' + e + ')'),
-
 
   call     trans:fn trans*:args          -> (fn + '(' + args.join(',') + ')'),
   send     :msg trans:recv trans*:args   -> (recv + '.' + msg + '(' + args.join(',') + ')'),
   json     trans*:props                  -> ('({' + props.join(',') + '})'),
   binding  :name trans:val               -> (name.toProgramString() + ': ' + val),
 
-  propagate :name trans:val              -> (name + '=' + val),
+  propagate :name :expr :location
+      ExtractNodes.trans(expr):inputs
+      trans(expr):val                    -> ['{ eval: function(values) { value[', name, ']',
+                                             '=', val,
+                                             ';}, inputs:', this._toItemString(inputs), '}'].join(''),
 
-  program trans*:xs                      -> ('{' + xs.join(';') + ';}'),
+  program { log('enter');} trans*:xs                      -> ('{' + xs.join(';\n') + '}'),
+};
+JsGen._toItemString = function(inputs) {
+  let items = {};
+  for (let i = 0; i < inputs.length; i++)
+    items[inputs[i]] = true;
+
+  let s = '[';
+  for (let i in items)
+    s += i + ',';
+  s += ']';
+  return s;
+};
+JsGen._isInput = function(name) {
+  return this._inputs && this._inputs[name] === true;
+};
+JsGen.setInput = function(inputs) {
+  this._inputs = {};
+  for (let i = 0; i < inputs.length; i++)
+    this._inputs[inputs[i]] = true;
 };
