@@ -9,6 +9,9 @@ let DataflowParser = ometa(BaseStrParser) {
   nameRest     = nameFirst | digit,
   name         = spaces <nameFirst nameRest*>,
 
+  // Builtins:
+  builtin      = "@" name,
+
   // Expressions:
   expr         = expr:x "||" andExpr:y                                    -> [#binop, "||", x, y]
                | andExpr,
@@ -41,6 +44,7 @@ let DataflowParser = ometa(BaseStrParser) {
                             | "." "name":f                                -> [#getp, [#string, f], p]
                             | "(" listOf(#expr, ','):as ")"               -> [#call, p].concat(as)
                             )
+               | builtin:b "(" listOf(#expr, ','):as ")"                  -> [#builtin, b].concat(as)
                | primExprHd,
   primExprHd   = "(" expr:e ")"                                           -> e
                | name:n                                                   -> [#get, n]

@@ -1,4 +1,8 @@
-let ExtractNodes = ometa {
+let flatten1 = function(array) {
+  return array.reduce(function(a, b) { return a.concat(b); });
+};
+
+let ExtractDepNodes = ometa {
   trans      = [:t apply(t):ans]         -> ans,
 
   number   :n                            -> [],
@@ -7,14 +11,36 @@ let ExtractNodes = ometa {
   arr      trans*:xs                     -> xs.reduce(function(a, b) { return a.concat(b); }),
   unop     :op trans:x                   -> x,
   getp     trans:fd trans:x              -> fd.concat(x),
-  get      :x                            -> x,
+  get      :x                            -> [x],
   binop    :op trans:x trans:y           -> x.concat(y),
   condExpr trans:cond trans:t trans:e    -> cond.concat(t).concat(e),
 
   call     trans:fn trans*:args          -> args.reduce(function(a, b) { return a.concat(b); }),
-  send     :msg trans:recv trans*:args   -> trans.concat(args.reduce(function(a, b) { return a.concat(b); })),
-  json     trans*:props                  -> props.reduce(function(a, b) { return a.concat(b); }),
+  send     :msg trans:recv trans*:args   -> trans.concat(flatten1(args)),
+  json     trans*:props                  -> flatten1(props),
   binding  :name trans:val               -> val,
+
+  builtin  :name trans*:args             -> [['builtin', name].join('-')],
+};
+let ExtractBuiltinsNodes = ometa {
+  trans      = [:t apply(t):ans]         -> ans,
+
+  number   :n                            -> [],
+  string   :s                            -> [],
+  regExpr  :x                            -> [],
+  arr      trans*:xs                     -> flatten1(xs),
+  unop     :op trans:x                   -> x,
+  getp     trans:fd trans:x              -> fd.concat(x),
+  get      :x                            -> [],
+  binop    :op trans:x trans:y           -> x.concat(y),
+  condExpr trans:cond trans:t trans:e    -> cond.concat(t).concat(e),
+
+  call     trans:fn trans*:args          -> flatten1(args),
+  send     :msg trans:recv trans*:args   -> trans.concat(flatten1(args)),
+  json     trans*:props                  -> flatten1(props),
+  binding  :name trans:val               -> val,
+
+  builtin  :name trans*:args             -> [name],
 };
 
 let JsGen = ometa {
@@ -35,13 +61,15 @@ let JsGen = ometa {
   json     trans*:props                  -> ('({' + props.join(',') + '})'),
   binding  :name trans:val               -> (name.toProgramString() + ': ' + val),
 
-  propagate :name :expr :location
-      ExtractNodes.trans(expr):inputs
-      trans(expr):val                    -> ['{ eval: function(values) { value[', name, ']',
-                                             '=', val,
-                                             ';}, inputs:', this._toItemString(inputs), '}'].join(''),
+  builtin  :name trans*:xs               -> ['values[', name.toProgramString(), ']'].join(''),
 
-  program { log('enter');} trans*:xs                      -> ('{' + xs.join(';\n') + '}'),
+  propagate :name :expr :location
+      ExtractDepNodes.trans(expr):inputs
+      trans(expr):val                    -> ['{ eval:function(values){return ', val, ';}',
+                                             ',name:', name.toProgramString(),
+                                             ',inputs:', this._toItemString(inputs), '}'].join(''),
+
+  program trans*:xs                      -> ('[' + xs.join(';\n') + ']'),
 };
 JsGen._toItemString = function(inputs) {
   let items = {};
@@ -50,7 +78,7 @@ JsGen._toItemString = function(inputs) {
 
   let s = '[';
   for (let i in items)
-    s += i + ',';
+    s += i.toProgramString() + ',';
   s += ']';
   return s;
 };
