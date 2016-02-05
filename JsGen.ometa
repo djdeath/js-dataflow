@@ -22,6 +22,7 @@ let ExtractDepNodes = ometa {
 
   builtin  :name trans*:args             -> [['builtin', name].join('-')],
 };
+
 let ExtractBuiltinsNodes = ometa {
   trans      = [:t apply(t):ans]         -> ans,
 
@@ -40,7 +41,7 @@ let ExtractBuiltinsNodes = ometa {
   json     trans*:props                  -> flatten1(props),
   binding  :name trans:val               -> val,
 
-  builtin  :name trans*:args             -> [name],
+  builtin  :name trans*:args             -> [{name: name, args: args}],
 };
 
 let JsGen = ometa {
