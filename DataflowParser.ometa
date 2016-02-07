@@ -40,8 +40,8 @@ let DataflowParser = ometa(BaseStrParser) {
                | "+"      primExpr:p                                      -> [#unop,  "+",   p]
                | primExpr,
   primExpr     = primExpr:p ( "[" expr:i "]"                              -> [#getp, i, p]
-                            | "." "name":m "(" listOf(#expr, ','):as ")"  -> [#send, m, p].concat(as)
-                            | "." "name":f                                -> [#getp, [#string, f], p]
+                            | "." name:m "(" listOf(#expr, ','):as ")"    -> [#send, m, p].concat(as)
+                            | "." name:f                                  -> [#getp, [#string, f], p]
                             | "(" listOf(#expr, ','):as ")"               -> [#call, p].concat(as)
                             )
                | builtin:b "(" listOf(#expr, ','):as ")"                  -> [#builtin, b].concat(as)
