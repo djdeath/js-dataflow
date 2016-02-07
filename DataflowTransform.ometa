@@ -1,12 +1,20 @@
-let NullTransform = ometa {
-  trans      = [:t apply(t):ans]         -> ans,
+let flatten1 = function(array) {
+  return array.reduce(function(a, b) { return a.concat(b); });
+};
+
+let _e = function(node) { return node.expr; };
+let _n = function(node) { return node.nodes; };
+let _i = function(node) { return node.inputs; };
+
+
+let ExtractExpr = ometa {
+  trans     = [:t apply(t):ans]          -> ans,
 
   number   :n                            -> [#number, n],
   string   :s                            -> [#string, s],
-  name     :s                            -> [#name, s],
   regExpr  :x                            -> [#regExpr, x],
   arr      trans*:xs                     -> [#arr].concat(xs),
-  unop     :op trans:x                   -> [#unop, x],
+  unop     :op trans:x                   -> [#unop, op, x],
   getp     trans:fd trans:x              -> [#getp, fd, x],
   get      :x                            -> [#get, x],
   binop    :op trans:x trans:y           -> [#binop, op, x, y],
@@ -14,27 +22,70 @@ let NullTransform = ometa {
 
   call     trans:fn trans*:args          -> [#call, fn].concat(args),
   send     :msg trans:recv trans*:args   -> [#send, msg, recv].concat(args),
-  json     trans*:props                  -> [#json].concat(trans),
+  json     trans*:props                  -> [#json].concat(props),
   binding  :name trans:val               -> [#binding, name, val],
 
-  propagate :name trans:val :location    -> [#propagate, name, val, location],
+  builtin  :name trans*:args             -> [#get, '@' + name],
 
-  program trans*:ts                      -> [#program].concat(ts),
-};
+  propagate :name trans:x :l             -> [#propagate, name, x, l],
 
-let ExtractNodesTransform = ometa(NullTransform) {
-  propagate :name trans:val :location    -> { name: name, location: location },
-  program trans*:nodes                   -> nodes,
+  program trans*:xs                      -> [#program].concat(xs),
 };
 
-let SetNodesTransforms = ometa(NullTransform) {
-  get :x                                 -> (this.isNode(x) ? [#node, x] : [#get, x]),
+let ExtractInputs = ometa {
+  trans     = [:t apply(t):ans]          -> ans,
+
+  number   :n                            -> [],
+  string   :s                            -> [],
+  regExpr  :x                            -> [],
+  arr      trans*:xs                     -> flatten1(xs),
+  unop     :op trans:x                   -> x,
+  getp     trans:fd trans:x              -> fd.concat(x),
+  get      :x                            -> [x],
+  binop    :op trans:x trans:y           -> x.concat(y),
+  condExpr trans:cond trans:t trans:e    -> cond.concat(t).concat(e),
+
+  call     trans:fn trans*:args          -> fn.concat(flatten1(args)),
+  send     :msg trans:recv trans*:args   -> trans.concat(flatten1(args)),
+  json     trans*:props                  -> flatten1(props),
+  binding  :name trans:val               -> val,
+
+  builtin  :name trans*:args             -> ['@' + name],
+
+  propagate :name trans:x :l             -> x,
+
+  program trans*:xs                      -> flatten1(xs),
 };
-SetNodesTransforms.isNode = function(name) {
-  return this._nodes[name] === true;
-};
-SetNodesTransforms.setNodes = function(names) {
-  this._nodes = {};
-  for (let i = 0; i < names.length; i++)
-    this._nodes[names[i]] = true;
+
+let ExtractNodes = ometa {
+  trans     = [:t apply(t):ans]          -> ans,
+
+  number   :n                            -> [],
+  string   :s                            -> [],
+  regExpr  :x                            -> [],
+  arr      trans*:xs                     -> flatten1(xs),
+  unop     :op trans:x                   -> x,
+  getp     trans:fd trans:x              -> fd.concat(x),
+  get      :x                            -> [],
+  binop    :op trans:x trans:y           -> x.concat(y),
+  condExpr trans:cond trans:t trans:e    -> cond.concat(t).concat(e),
+
+  call     trans:fn trans*:args          -> fn.concat(flatten1(args)),
+  send     :msg trans:recv trans*:args   -> trans.concat(flatten1(args)),
+  json     trans*:props                  -> flatten1(props),
+  binding  :name trans:val               -> val,
+
+  builtin  :name
+           (anything:a
+            ExtractExpr.trans(a):e
+            trans(a):n
+            ExtractInputs.trans(a):i     -> { expr: e, nodes: n, inputs: i })*:args
+                                         -> [{ name: '@' + name, expr: args.map(_e), inputs: flatten1(args.map(_i)), builtin: true }].concat(flatten1(args.map(_n))),
+
+  propagate :name :a
+      ExtractExpr.trans(a):e
+      ExtractInputs.trans(a):i
+      trans(a):nodes :l                  -> [{ name: name, expr: e, inputs: i, builtin: false }].concat(nodes),
+
+  program trans*:xs                      -> flatten1(xs),
 };
