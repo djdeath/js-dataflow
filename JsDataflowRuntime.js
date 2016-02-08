@@ -9,17 +9,14 @@ const Dataflow = new Lang.Class({
   _builtins: {
     "@timer": {
       start: function(node, delay) {
-        log('start ' + node.name + ' delay='+ delay);
         node.value = 0;
         node._timeout = Mainloop.timeout_add(delay, function() {
-          log('kick ' + node.name);
           node.value += delay;
           node.callback(node);
           return true;
         });
       },
       stop: function(node) {
-        log('stop ' + node.name);
         if (node._timeout !== undefined) {
           Mainloop.source_remove(node._timeout);
           delete node._timeout;
@@ -29,6 +26,7 @@ const Dataflow = new Lang.Class({
   },
 
   _init: function(args) {
+    this._debug = args.debug;
     this._nodes = {};
     for (let i = 0; i < args.nodes.length; i++) {
       let node = args.nodes[i];
@@ -47,7 +45,13 @@ const Dataflow = new Lang.Class({
       for (let j = 0; j < node.inputs.length; j++)
         this._nodes[node.inputs[j]].children.push(node.name);
     }
-    log('->' + JSON.stringify(this._nodes));
+    this._d('->' + JSON.stringify(this._nodes));
+  },
+
+  _d: function() {
+    if (!this._debug)
+      return;
+    log(arguments);
   },
 
   // Testing type of node.
@@ -59,7 +63,7 @@ const Dataflow = new Lang.Class({
       this._updateNode(this._nodes[node.children[i]]);
   },
   _updateNode: function(node) {
-    log('update ' + node.name + ' children=' + node.children)
+    this._d('update ' + node.name + ' children=' + node.children)
     if (this._isBuiltin(node)) {
       node.callback = this._updateNodeChildren.bind(this);
       node.stop(this._nodes, this._builtins);

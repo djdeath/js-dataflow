@@ -23,7 +23,6 @@ let translate = function(text) {
 
 let toDataflow = function(text) {
   let code = translate(text);
-  log(code);
   let params = eval('(function(){return ' + code + ';})()');
   return new DataflowRuntime.Dataflow({ nodes: params });
 };
@@ -31,7 +30,6 @@ let toDataflow = function(text) {
 let text = Utils.loadFile(ARGV[0]);
 let flow = toDataflow(text);
 flow.start();
-log(JSON.stringify(flow.getValues()));
 
 Mainloop.timeout_add(2000, function() {
   log(JSON.stringify(flow.getValues()));
