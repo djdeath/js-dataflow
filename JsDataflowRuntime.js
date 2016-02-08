@@ -36,6 +36,22 @@ const Dataflow = new Lang.Class({
         }
       },
     },
+    "property": {
+      start: function(node, object, property) {
+        node.value = object[property];
+        node._signal = object.connect('notify::' + property, function() {
+          node.value = object[property];
+          node.callback(node);
+        });
+        return true;
+      },
+      stop: function(node) {
+        if (node._signal !== undefined) {
+          object.disconnect(node._signal);
+          delete node._signal;
+        }
+      },
+    }
   },
 
   _init: function(args) {
