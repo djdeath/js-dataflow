@@ -1,5 +1,18 @@
 const Lang = imports.lang;
 const Mainloop = imports.mainloop;
+const Parser = imports.Parser;
+
+let translate = function(text) {
+  let tree = Parser.DataflowParser.matchAll(text, 'top');
+  let nodes = Parser.ExtractNodes.match(tree, 'trans');
+
+  //log('Nodes: ' + nodes.map(function(e) { return e.name; }));
+  let js = Parser.DataflowJsGen.createInstance();
+  js.setInput(nodes.map(function(e) { return e.name; }));
+
+  let ret = js.match(nodes, 'program');
+  return ret;
+};
 
 const Dataflow = new Lang.Class({
   Name: 'Dataflow',

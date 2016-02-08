@@ -1,5 +1,4 @@
 const Mainloop = imports.mainloop;
-const Parser = imports.Parser;
 const Utils = imports.Utils;
 
 const DataflowRuntime = imports.JsDataflowRuntime;
@@ -7,24 +6,24 @@ const DataflowRuntime = imports.JsDataflowRuntime;
 if (ARGV.length < 1)
   throw new Error('Need at least one argument');
 
-let translate = function(text) {
-  let tree = Parser.DataflowParser.matchAll(text, 'top');
-  let nodes = Parser.ExtractNodes.match(tree, 'trans');
+// let translate = function(text) {
+//   let tree = Parser.DataflowParser.matchAll(text, 'top');
+//   let nodes = Parser.ExtractNodes.match(tree, 'trans');
 
-  log('Nodes: ' + nodes.map(function(e) { return e.name; }));
+//   log('Nodes: ' + nodes.map(function(e) { return e.name; }));
 
 
-  let js = Parser.DataflowJsGen.createInstance();
-  js.setInput(nodes.map(function(e) { return e.name; }));
+//   let js = Parser.DataflowJsGen.createInstance();
+//   js.setInput(nodes.map(function(e) { return e.name; }));
 
-  let ret = js.match(nodes, 'program');
-  return ret;
-};
+//   let ret = js.match(nodes, 'program');
+//   return ret;
+// };
 
 let z = 43;
 
 let toDataflow = function(text) {
-  let code = translate(text);
+  let code = DataflowRuntime.translate(text);
   let params = eval('(function(){return ' + code + ';})()');
   return new DataflowRuntime.Dataflow({ nodes: params, debug: true });
 };
