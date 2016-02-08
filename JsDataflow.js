@@ -24,7 +24,7 @@ let translate = function(text) {
 let toDataflow = function(text) {
   let code = translate(text);
   let params = eval('(function(){return ' + code + ';})()');
-  return new DataflowRuntime.Dataflow({ nodes: params });
+  return new DataflowRuntime.Dataflow({ nodes: params, debug: true });
 };
 
 let text = Utils.loadFile(ARGV[0]);
