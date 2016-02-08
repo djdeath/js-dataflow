@@ -7,7 +7,7 @@ let JsGen = ometa {
   arr      trans*:xs                     -> ('[' + xs.join(',') + ']'),
   unop     :op trans:x                   -> ('(' + op + ' ' + x + ')'),
   getp     trans:fd trans:x              -> (x + '[' + fd + ']'),
-  get      :x                            -> (this._isInput(x) ? 'values[' + x.toProgramString() + ']' : x),
+  get      :x                            -> (this._isInput(x) ? 'nodes[' + x.toProgramString() + '].value' : x),
   binop    :op trans:x trans:y           -> ('(' + x + ' ' + op + ' ' + y + ')'),
   condExpr trans:cond trans:t trans:e    -> ('(' + cond + '?' + t + ':' + e + ')'),
 
@@ -18,14 +18,14 @@ let JsGen = ometa {
 
   node = :e ?(!e.builtin)
          trans(e.expr):c                 -> ['{name:', e.name.toProgramString(),
-                                             ',eval: function(nodes){return ', c, ';}',
-                                             ',input:', this._toItemString(e.inputs),'}'].join(''),
+                                             ',eval:function(nodes){return ', c, ';}',
+                                             ',inputs:', this._toItemString(e.inputs),'}'].join(''),
 
   builtinArgs = [ trans*:xs ]            -> xs,
   builtin = :e ?(e.builtin)
             builtinArgs(e.expr):args     -> ['{name:', e.name.toProgramString(),
-                                             ',eval: function(nodes){return builtins[', e.name.toProgramString(), '];}',
-                                             ',input:', this._toItemString(e.inputs),'}'].join(''),
+                                             ',eval:function(nodes){return builtins[', e.name.toProgramString(), '];}',
+                                             ',inputs:', this._toItemString(e.inputs),'}'].join(''),
 
   program = [ (node | builtin)*:ns ]     -> ('[' + ns.join(',\n') + ']'),
 };
