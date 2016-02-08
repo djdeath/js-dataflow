@@ -21,6 +21,8 @@ let translate = function(text) {
   return ret;
 };
 
+let z = 43;
+
 let toDataflow = function(text) {
   let code = translate(text);
   let params = eval('(function(){return ' + code + ';})()');

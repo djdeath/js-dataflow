@@ -33,7 +33,8 @@ let DataflowJsGen = ometa {
 DataflowJsGen._toItemString = function(inputs) {
   let items = {};
   for (let i = 0; i < inputs.length; i++)
-    items[inputs[i]] = true;
+    if (this._isInput(inputs[i]))
+      items[inputs[i]] = true;
 
   let s = '[';
   for (let i in items)
