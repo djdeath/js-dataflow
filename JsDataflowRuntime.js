@@ -1,13 +1,12 @@
 const Lang = imports.lang;
 const Mainloop = imports.mainloop;
-//const GLib = imports.gi.GLib;
 
 const Dataflow = new Lang.Class({
   Name: 'Dataflow',
 
   // Builtin functions.
   _builtins: {
-    "@timer": {
+    "timer": {
       start: function(node, delay) {
         node.value = 0;
         node._timeout = Mainloop.timeout_add(delay, function() {
@@ -15,6 +14,7 @@ const Dataflow = new Lang.Class({
           node.callback(node);
           return true;
         });
+        return true;
       },
       stop: function(node) {
         if (node._timeout !== undefined) {
@@ -32,11 +32,12 @@ const Dataflow = new Lang.Class({
       let node = args.nodes[i];
       this._nodes[node.name] = {
         name: node.name,
+        builtin: node.builtin,
         children: [],
         eval: node.eval,
         start: node.start,
-        stop: node.stop,
         inputs: node.inputs,
+        callback: this._updateNodeChildren.bind(this),
         value: undefined,
       };
     }
@@ -49,9 +50,9 @@ const Dataflow = new Lang.Class({
   },
 
   _d: function() {
-    if (!this._debug)
-      return;
-    log(arguments);
+    if (this._debug) {
+      log.apply(window, arguments);
+    }
   },
 
   // Testing type of node.
@@ -59,18 +60,20 @@ const Dataflow = new Lang.Class({
     return node.start !== undefined;
   },
   _updateNodeChildren: function(node) {
+    this._d('updated ' + node.name + '=' + node.value)
     for (let i = 0; i < node.children.length; i++)
       this._updateNode(this._nodes[node.children[i]]);
   },
   _updateNode: function(node) {
-    this._d('update ' + node.name + ' children=' + node.children)
+    this._d('update ' + node.name + '=' + node.value)
     if (this._isBuiltin(node)) {
-      node.callback = this._updateNodeChildren.bind(this);
-      node.stop(this._nodes, this._builtins);
-      node.start(this._nodes, this._builtins);
-    } else
+      this._builtins[node.builtin].stop(node);
+      if (node.start(this._nodes, this._builtins))
+        this._updateNodeChildren(node);
+    } else {
       node.value = node.eval(this._nodes);
-    this._updateNodeChildren(node);
+      this._updateNodeChildren(node);
+    }
   },
 
   // Graph helpers.
