@@ -1,4 +1,4 @@
-let JsGen = ometa {
+let DataflowJsGen = ometa {
   trans      = [:t apply(t):ans]         -> ans,
 
   number   :n                            -> ('(' + n + ')'),
@@ -21,15 +21,16 @@ let JsGen = ometa {
                                              ',eval:function(nodes){return ', c, ';}',
                                              ',inputs:', this._toItemString(e.inputs),'}'].join(''),
 
-  builtinArgs = [ trans*:xs ]            -> xs,
+  builtinArgs = [ trans*:xs ]            -> xs.join(','),
   builtin = :e ?(e.builtin)
             builtinArgs(e.expr):args     -> ['{name:', e.name.toProgramString(),
-                                             ',eval:function(nodes){return builtins[', e.name.toProgramString(), '];}',
+                                             ',start:function(nodes, builtins){return builtins[', e.builtin.toProgramString(), '].start(nodes[', e.name.toProgramString(), '],', args, ');}',
+                                             ',stop:function(nodes, builtins){return builtins[', e.builtin.toProgramString(), '].stop(nodes[', e.name.toProgramString(), ']);}',
                                              ',inputs:', this._toItemString(e.inputs),'}'].join(''),
 
   program = [ (node | builtin)*:ns ]     -> ('[' + ns.join(',\n') + ']'),
 };
-JsGen._toItemString = function(inputs) {
+DataflowJsGen._toItemString = function(inputs) {
   let items = {};
   for (let i = 0; i < inputs.length; i++)
     items[inputs[i]] = true;
@@ -40,10 +41,10 @@ JsGen._toItemString = function(inputs) {
   s += ']';
   return s;
 };
-JsGen._isInput = function(name) {
+DataflowJsGen._isInput = function(name) {
   return this._inputs && this._inputs[name] === true;
 };
-JsGen.setInput = function(inputs) {
+DataflowJsGen.setInput = function(inputs) {
   this._inputs = {};
   for (let i = 0; i < inputs.length; i++)
     this._inputs[inputs[i]] = true;

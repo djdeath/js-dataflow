@@ -80,12 +80,12 @@ let ExtractNodes = ometa {
             ExtractExpr.trans(a):e
             trans(a):n
             ExtractInputs.trans(a):i     -> { expr: e, nodes: n, inputs: i })*:args
-                                         -> [{ name: '@' + name, expr: args.map(_e), inputs: flatten1(args.map(_i)), builtin: true }].concat(flatten1(args.map(_n))),
+                                         -> [{ name: '@' + name, expr: args.map(_e), inputs: flatten1(args.map(_i)), builtin: '@' + name }].concat(flatten1(args.map(_n))),
 
   propagate :name :a
       ExtractExpr.trans(a):e
       ExtractInputs.trans(a):i
-      trans(a):nodes :l                  -> [{ name: name, expr: e, inputs: i, builtin: false }].concat(nodes),
+      trans(a):nodes :l                  -> [{ name: name, expr: e, inputs: i }].concat(nodes),
 
   program trans*:xs                      -> flatten1(xs),
 };

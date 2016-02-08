@@ -1,3 +1,4 @@
+const Mainloop = imports.mainloop;
 const Parser = imports.Parser;
 const Utils = imports.Utils;
 
@@ -10,7 +11,10 @@ let translate = function(text) {
   let tree = Parser.DataflowParser.matchAll(text, 'top');
   let nodes = Parser.ExtractNodes.match(tree, 'trans');
 
-  let js = Parser.JsGen.createInstance();
+  log('Nodes: ' + nodes.map(function(e) { return e.name; }));
+
+
+  let js = Parser.DataflowJsGen.createInstance();
   js.setInput(nodes.map(function(e) { return e.name; }));
 
   let ret = js.match(nodes, 'program');
@@ -18,7 +22,9 @@ let translate = function(text) {
 };
 
 let toDataflow = function(text) {
-  let params = eval('(function(){return ' + translate(text) + ';})()');
+  let code = translate(text);
+  log(code);
+  let params = eval('(function(){return ' + code + ';})()');
   return new DataflowRuntime.Dataflow({ nodes: params });
 };
 
@@ -26,3 +32,11 @@ let text = Utils.loadFile(ARGV[0]);
 let flow = toDataflow(text);
 flow.start();
 log(JSON.stringify(flow.getValues()));
+
+Mainloop.timeout_add(2000, function() {
+  log(JSON.stringify(flow.getValues()));
+  flow.stop();
+  Mainloop.quit('main');
+  return false;
+});
+Mainloop.run('main');
