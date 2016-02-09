@@ -14,45 +14,48 @@ let translate = function(text) {
   return ret;
 };
 
+// Builtin functions.
+const _builtins = {
+  // Tick at delay ms.
+  "timer": {
+    start: function(delay) {
+      this.value = 0;
+      this._timeout = Mainloop.timeout_add(delay, function() {
+        this.value += delay;
+        this.callback(this);
+        return true;
+      }.bind(this));
+      this.callback(this);
+    },
+    stop: function() {
+      if (this._timeout !== undefined) {
+        Mainloop.source_remove(this._timeout);
+        delete this._timeout;
+      }
+    },
+  },
+  // Listens to a property.
+  "property": {
+    start: function(object, property) {
+      this.value = object[property];
+      this._signal = object.connect('notify::' + property, function() {
+        this.value = object[property];
+        this.callback(this);
+      }.bind(this));
+      this.callback(this);
+    },
+    stop: function() {
+      if (this._signal !== undefined) {
+        object.disconnect(this._signal);
+        delete this._signal;
+      }
+    },
+  }
+};
+
+
 const Dataflow = new Lang.Class({
   Name: 'Dataflow',
-
-  // Builtin functions.
-  _builtins: {
-    "timer": {
-      start: function(node, delay) {
-        node.value = 0;
-        node._timeout = Mainloop.timeout_add(delay, function() {
-          node.value += delay;
-          node.callback(node);
-          return true;
-        });
-        return true;
-      },
-      stop: function(node) {
-        if (node._timeout !== undefined) {
-          Mainloop.source_remove(node._timeout);
-          delete node._timeout;
-        }
-      },
-    },
-    "property": {
-      start: function(node, object, property) {
-        node.value = object[property];
-        node._signal = object.connect('notify::' + property, function() {
-          node.value = object[property];
-          node.callback(node);
-        });
-        return true;
-      },
-      stop: function(node) {
-        if (node._signal !== undefined) {
-          object.disconnect(node._signal);
-          delete node._signal;
-        }
-      },
-    }
-  },
 
   _init: function(args) {
     this._debug = args.debug;
@@ -64,9 +67,10 @@ const Dataflow = new Lang.Class({
         builtin: node.builtin,
         children: [],
         eval: node.eval,
-        start: node.start,
+        start: node.builtin ? _builtins[node.builtin].start : null,
+        stop: node.builtin ? _builtins[node.builtin].stop : null,
+        callback: node.builtin ? this._updateNodeChildren.bind(this) : null,
         inputs: node.inputs,
-        callback: this._updateNodeChildren.bind(this),
         value: undefined,
       };
     }
@@ -78,6 +82,7 @@ const Dataflow = new Lang.Class({
     this._d('->' + JSON.stringify(this._nodes));
   },
 
+  // Debug.
   _d: function() {
     if (this._debug) {
       log.apply(window, arguments);
@@ -86,7 +91,7 @@ const Dataflow = new Lang.Class({
 
   // Testing type of node.
   _isBuiltin: function(node) {
-    return node.start !== undefined;
+    return node.builtin !== undefined;
   },
   _updateNodeChildren: function(node) {
     this._d('updated ' + node.name + '=' + node.value)
@@ -96,9 +101,8 @@ const Dataflow = new Lang.Class({
   _updateNode: function(node) {
     this._d('update ' + node.name + '=' + node.value)
     if (this._isBuiltin(node)) {
-      this._builtins[node.builtin].stop(node);
-      if (node.start(this._nodes, this._builtins))
-        this._updateNodeChildren(node);
+      node.stop();
+      node.start.apply(node, node.eval(this._nodes));
     } else {
       node.value = node.eval(this._nodes);
       this._updateNodeChildren(node);
@@ -112,16 +116,14 @@ const Dataflow = new Lang.Class({
       let node = this._nodes[n];
       if (node.inputs.length >= 1)
         continue;
-
       this._updateNode(node);
     }
   },
   stop: function() {
     for (let n in this._nodes) {
       let node = this._nodes[n];
-      if (!node.stop)
-        continue;
-      node.stop(this._nodes, this._builtins);
+      if (node.stop)
+        node.stop();
     }
   },
   getValues: function() {

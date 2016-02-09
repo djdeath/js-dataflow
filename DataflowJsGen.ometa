@@ -25,7 +25,7 @@ let DataflowJsGen = ometa {
   builtin = :e ?(e.builtin)
             builtinArgs(e.expr):args     -> ['{name:', e.name.toProgramString(),
                                              ',builtin:', e.builtin.toProgramString(),
-                                             ',start:function(nodes, builtins){return builtins[', e.builtin.toProgramString(), '].start(nodes[', e.name.toProgramString(), '],', args, ');}',
+                                             ',eval:function(nodes){return [', args, '];}',
                                              ',inputs:', this._toItemString(e.inputs),'}'].join(''),
 
   program = [ (node | builtin)*:ns ]     -> ('[' + ns.join(',\n') + ']'),
