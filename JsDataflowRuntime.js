@@ -22,7 +22,7 @@ let translate = function(text) {
 const _builtins = {
   // Tick at delay ms.
   "timer": {
-    start: function(delay) {
+    start: function(from, delay) {
       this.value = 0;
       this._timeout = Mainloop.timeout_add(delay, function() {
         this.value += delay;
@@ -40,7 +40,7 @@ const _builtins = {
   },
   // Listens to a property.
   "property": {
-    start: function(object, property) {
+    start: function(from, object, property) {
       this.value = object[property];
       this._signal = object.connect('notify::' + property, function() {
         this.value = object[property];
@@ -54,7 +54,22 @@ const _builtins = {
         delete this._signal;
       }
     },
-  }
+  },
+  // Throttling
+  "throttle": {
+    start: function(from, input, output) {
+      let oldTrigger = this._lastTrigger;
+      this._last = input;
+      this._lastTrigger = from;
+
+      if (oldTrigger !== undefined &&
+          this._lastTrigger !== oldTrigger) {
+        this.value = this._last;
+        this.callback(this);
+      }
+    },
+    stop: function() {},
+  },
 };
 
 
@@ -100,13 +115,13 @@ const Dataflow = new Lang.Class({
   _updateNodeChildren: function(node) {
     this._d('updated ' + node.name + '=' + node.value)
     for (let i = 0; i < node.children.length; i++)
-      this._updateNode(this._nodes[node.children[i]]);
+      this._updateNode(this._nodes[node.children[i]], node);
   },
-  _updateNode: function(node) {
+  _updateNode: function(node, from) {
     this._d('update ' + node.name + '=' + node.value)
     if (this._isBuiltin(node)) {
       node.stop();
-      node.start.apply(node, node.eval(this._nodes));
+      node.start.apply(node, [from].concat(node.eval(this._nodes)));
     } else {
       node.value = node.eval(this._nodes);
       this._updateNodeChildren(node);
