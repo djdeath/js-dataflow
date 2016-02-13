@@ -1,6 +1,10 @@
 let DataflowParser = ometa(BaseStrParser) {
 //  space        = ^space | fromToOrEnd('//', '\n'),
 
+  // Strings:
+  str          = spaces '\'' (~'\'' char)*:cs '\''           -> cs.join('')
+               | spaces '"'  (~'"'  char)*:cs '"'            -> cs.join(''),
+
   // Numbers:
   number       = spaces <digit+ ('.' digit+)?>:f                          -> parseFloat(f),
 
@@ -49,10 +53,11 @@ let DataflowParser = ometa(BaseStrParser) {
   primExprHd   = "(" expr:e ")"                                           -> e
                | name:n                                                   -> [#get, n]
                | number:n                                                 -> [#number, n]
+               | str:s                                                    -> [#string, s]
                | "[" enum(#expr, ','):es "]"                              -> [#arr].concat(es),
 
   // Propagations:
   propagate    = name:n "<-" expr:e                                       -> [#propagate, n, e, @location],
 
-  top          = spaces (propagate:p spaces -> p)*:pp end                 -> [#program].concat(pp),
+  program      = spaces (propagate:p spaces -> p)*:pp end                 -> [#program].concat(pp),
 };

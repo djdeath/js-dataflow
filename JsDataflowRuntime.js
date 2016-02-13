@@ -3,15 +3,19 @@ const Mainloop = imports.mainloop;
 const Parser = imports.Parser;
 
 let translate = function(text) {
-  let tree = Parser.DataflowParser.matchAll(text, 'top');
-  let nodes = Parser.ExtractNodes.match(tree, 'trans');
+  try {
+    let tree = Parser.DataflowParser.matchAll(text, 'program');
+    let nodes = Parser.ExtractNodes.match(tree, 'trans');
 
-  //log('Nodes: ' + nodes.map(function(e) { return e.name; }));
-  let js = Parser.DataflowJsGen.createInstance();
-  js.setInput(nodes.map(function(e) { return e.name; }));
+    //log('Nodes: ' + nodes.map(function(e) { return e.name; }));
+    let js = Parser.DataflowJsGen.createInstance();
+    js.setInput(nodes.map(function(e) { return e.name; }));
 
-  let ret = js.match(nodes, 'program');
-  return ret;
+    let ret = js.match(nodes, 'program');
+    return ret;
+  } catch (e) {
+    log('Error : ' + e.idx);
+  }
 };
 
 // Builtin functions.
