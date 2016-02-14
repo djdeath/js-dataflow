@@ -97,7 +97,8 @@ const Dataflow = new Lang.Class({
       for (let j = 0; j < node.inputs.length; j++)
         this._nodes[node.inputs[j]].children.push(node.name);
     }
-    this._d('->' + JSON.stringify(this._nodes));
+    for (let n in this._nodes)
+      this._d('->' + JSON.stringify(this._nodes[n]));
   },
 
   // Debug.
