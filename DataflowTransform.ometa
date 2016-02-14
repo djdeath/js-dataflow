@@ -26,7 +26,7 @@ let ExtractExpr = ometa {
   json     trans*:props                  -> [#json].concat(props),
   binding  :name trans:val               -> [#binding, name, val],
 
-  builtin  :name trans*:args             -> [#get, '@' + name],
+  builtin  :name :id trans*:args         -> [#get, '@' + id],
 
   propagate :name trans:x :l             -> [#propagate, name, x, l],
 
@@ -51,7 +51,7 @@ let ExtractInputs = ometa {
   json     trans*:props                  -> flatten1(props),
   binding  :name trans:val               -> val,
 
-  builtin  :name trans*:args             -> ['@' + name],
+  builtin  :name :id trans*:args         -> ['@' + id],
 
   propagate :name trans:x :l             -> x,
 
@@ -76,16 +76,16 @@ let ExtractNodes = ometa {
   json     trans*:props                  -> flatten1(props),
   binding  :name trans:val               -> val,
 
-  builtin  :name
+  builtin  :name :id
            (anything:a
             ExtractExpr.trans(a):e
             trans(a):n
             ExtractInputs.trans(a):i     -> { expr: e, nodes: n, inputs: i })*:args
-                                         -> [{ name: '@' + name, expr: args.map(_e), inputs: flatten1(args.map(_i)), builtin: name }].concat(flatten1(args.map(_n))),
+                                         -> [{ name: '@' + id, expr: args.map(_e), inputs: flatten1(args.map(_i)), builtin: name }].concat(flatten1(args.map(_n))),
 
   propagate :name :a
-      ExtractExpr.trans(a):e
       ExtractInputs.trans(a):i
+      ExtractExpr.trans(a):e
       trans(a):nodes :l                  -> [{ name: name, expr: e, inputs: i }].concat(nodes),
 
   program trans*:xs                      -> flatten1(xs),

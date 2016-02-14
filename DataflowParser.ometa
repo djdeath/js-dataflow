@@ -48,7 +48,7 @@ let DataflowParser = ometa(BaseStrParser) {
                             | "." name:f                                  -> [#getp, [#string, f], p]
                             | "(" listOf(#expr, ','):as ")"               -> [#call, p].concat(as)
                             )
-               | builtin:b "(" listOf(#expr, ','):as ")"                  -> [#builtin, b].concat(as)
+               | builtin:b "(" listOf(#expr, ','):as ")"                  -> [#builtin, b, this._uniqueId(b)].concat(as)
                | primExprHd,
   primExprHd   = "(" expr:e ")"                                           -> e
                | name:n                                                   -> [#get, n]
@@ -60,4 +60,10 @@ let DataflowParser = ometa(BaseStrParser) {
   propagate    = name:n "<-" expr:e                                       -> [#propagate, n, e, @location],
 
   program      = spaces (propagate:p spaces -> p)*:pp end                 -> [#program].concat(pp),
+};
+DataflowParser._uniqueId = function(base) {
+  if (this._id === undefined)
+    this._id = 0;
+  this._id += 1;
+  return base + ':' + this._id;
 };
