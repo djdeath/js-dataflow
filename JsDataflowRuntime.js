@@ -62,8 +62,7 @@ const _builtins = {
       this._last = input;
       this._lastTrigger = from;
 
-      if (oldTrigger !== undefined &&
-          this._lastTrigger !== oldTrigger) {
+      if (oldTrigger !== undefined && from.name === this.inputs[1]) {
         this.value = this._last;
         this.callback(this);
       }
