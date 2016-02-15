@@ -47,7 +47,7 @@ let ExtractInputs = ometa {
   condExpr trans:cond trans:t trans:e    -> cond.concat(t).concat(e),
 
   call     trans:fn trans*:args          -> fn.concat(flatten1(args)),
-  send     :msg trans:recv trans*:args   -> trans.concat(flatten1(args)),
+  send     :msg trans:recv trans*:args   -> recv.concat(flatten1(args)),
   json     trans*:props                  -> flatten1(props),
   binding  :name trans:val               -> val,
 
@@ -72,7 +72,7 @@ let ExtractNodes = ometa {
   condExpr trans:cond trans:t trans:e    -> cond.concat(t).concat(e),
 
   call     trans:fn trans*:args          -> fn.concat(flatten1(args)),
-  send     :msg trans:recv trans*:args   -> trans.concat(flatten1(args)),
+  send     :msg trans:recv trans*:args   -> recv.concat(flatten1(args)),
   json     trans*:props                  -> flatten1(props),
   binding  :name trans:val               -> val,
 
