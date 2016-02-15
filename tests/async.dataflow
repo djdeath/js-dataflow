@@ -1,0 +1,4 @@
+text      <- 'coin'
+textTimer <- @timer(500)
+
+_         <- log(@throttle(text, textTimer))

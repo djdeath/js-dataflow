@@ -1,0 +1,4 @@
+timer1 <- @timer(20)
+timer2 <- @timer(500)
+
+_      <- log(@merge(timer1, timer2))
