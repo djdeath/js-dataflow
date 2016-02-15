@@ -18,6 +18,8 @@ let translate = function(text) {
   }
 };
 
+let _nop = function() {};
+
 // Builtin functions.
 const _builtins = {
   // Tick at delay ms.
@@ -55,7 +57,7 @@ const _builtins = {
       }
     },
   },
-  // Throttling
+  // Throttles input to the rate of output changes.
   "throttle": {
     start: function(from, input, output) {
       let oldTrigger = this._lastTrigger;
@@ -67,7 +69,46 @@ const _builtins = {
         this.callback(this);
       }
     },
-    stop: function() {},
+    stop: _nop,
+  },
+  // Merge n inputs.
+  "merge": {
+    start: function(from) {
+      if (from) {
+        this.value = from.value;
+        this.callback(this);
+      }
+    },
+    stop: _nop,
+  },
+  "startsWith": {
+    start: function(from, input, initval) {
+      if (!this._started) {
+        this._started = true;
+        this.value = initval;
+        this.callback(this);
+      }
+      if (from) {
+        this.value = input;
+        this.callback(this);
+      }
+    },
+    stop: _nop,
+  },
+  "and": {
+    start: function(from) {
+      if (from) {
+        for (let i = 1; i < arguments.length; i++) {
+          if (!arguments[i])
+            return;
+        }
+        this.value = true;
+        this.callback(this);
+      } else
+        this.value = false;
+    },
+    stop: _nop,
+  },
   },
 };
 
