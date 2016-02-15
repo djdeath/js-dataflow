@@ -121,6 +121,36 @@ const _builtins = {
         this.value = false;
     },
   },
+  // Rate limits an input.
+  "calm": {
+    start: _nop,
+    stop: function() {
+      if (this._timeout) {
+        Mainloop.source_remove(this._timeout);
+        delete this._timeout;
+      }
+    },
+    update: function(from, input, interval) {
+      if (this._timeout) {
+        this._nextValue = input;
+        this._armed = true;
+        return;
+      }
+      this._timeout = Mainloop.timeout_add(interval, function() {
+        if (this._armed) {
+          this._armed = false;
+          this.value = this._nextValue;
+          this.callback(this);
+          return true;
+        } else {
+          delete this._timeout;
+          return false;
+        }
+      }.bind(this));
+      this.value = input;
+      this.callback(this);
+    },
+  },
 };
 
 
