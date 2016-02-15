@@ -109,7 +109,6 @@ const _builtins = {
     },
     stop: _nop,
   },
-  },
 };
 
 
