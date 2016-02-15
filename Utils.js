@@ -48,3 +48,10 @@ let delayedSaveFile = function(file, content) {
 let allocationToString = function(box) {
   return '[' + box.width + 'x' + box.height + ' @ ' + box.x + 'x' + box.y + ']';
 };
+
+let copyArrayRange = function(array, from, to) {
+  let ret = [], j = 0;
+  for (let i = (from ? from : 0); i < (to ? to : array.length); i++)
+    ret[j++] = array[i];
+  return ret;
+};

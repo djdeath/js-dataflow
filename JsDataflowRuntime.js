@@ -12,6 +12,7 @@ let translate = function(text) {
     js.setInput(nodes.map(function(e) { return e.name; }));
 
     let ret = js.match(nodes, 'program');
+    //log(ret);
     return ret;
   } catch (e) {
     log('Error : ' + e.idx);
@@ -19,12 +20,16 @@ let translate = function(text) {
 };
 
 let _nop = function() {};
+let _update = function(from) {
+  this.stop();
+  this.start.apply(this, Utils.copyArrayRange(arguments, 1));
+};
 
 // Builtin functions.
 const _builtins = {
   // Tick at delay ms.
   "timer": {
-    start: function(from, delay) {
+    start: function(delay) {
       this.value = 0;
       this._timeout = Mainloop.timeout_add(delay, function() {
         this.value += delay;
@@ -34,15 +39,16 @@ const _builtins = {
       this.callback(this);
     },
     stop: function() {
-      if (this._timeout !== undefined) {
+      if (this._timeout) {
         Mainloop.source_remove(this._timeout);
         delete this._timeout;
       }
     },
+    update: _update,
   },
   // Listens to a property.
   "property": {
-    start: function(from, object, property) {
+    start: function(object, property) {
       this.value = object[property];
       this._signal = object.connect('notify::' + property, function() {
         this.value = object[property];
@@ -56,10 +62,13 @@ const _builtins = {
         delete this._signal;
       }
     },
+    update: _update,
   },
   // Throttles input to the rate of output changes.
   "throttle": {
-    start: function(from, input, output) {
+    start: _nop,
+    stop: _nop,
+    update: function(from, input, output) {
       let oldTrigger = this._lastTrigger;
       this._last = input;
       this._lastTrigger = from;
@@ -69,20 +78,22 @@ const _builtins = {
         this.callback(this);
       }
     },
-    stop: _nop,
   },
   // Merge n inputs.
   "merge": {
-    start: function(from) {
+    start: _nop,
+    stop: _nop,
+    update: function(from) {
       if (from) {
         this.value = from.value;
         this.callback(this);
       }
     },
-    stop: _nop,
   },
   "startsWith": {
-    start: function(from, input, initval) {
+    start: _nop,
+    stop: _nop,
+    update: function(from, input, initval) {
       if (!this._started) {
         this._started = true;
         this.value = initval;
@@ -93,10 +104,12 @@ const _builtins = {
         this.callback(this);
       }
     },
-    stop: _nop,
   },
+  // Combines multiples conditions.
   "and": {
-    start: function(from) {
+    start: _nop,
+    stop: _nop,
+    update: function(from) {
       if (from) {
         for (let i = 1; i < arguments.length; i++) {
           if (!arguments[i])
@@ -107,7 +120,6 @@ const _builtins = {
       } else
         this.value = false;
     },
-    stop: _nop,
   },
 };
 
@@ -127,6 +139,7 @@ const Dataflow = new Lang.Class({
         eval: node.eval,
         start: node.builtin ? _builtins[node.builtin].start : null,
         stop: node.builtin ? _builtins[node.builtin].stop : null,
+        update: node.builtin ? _builtins[node.builtin].update : null,
         callback: node.builtin ? this._updateNodeChildren.bind(this) : null,
         inputs: node.inputs,
         value: undefined,
@@ -160,8 +173,7 @@ const Dataflow = new Lang.Class({
   _updateNode: function(node, from) {
     this._d('update ' + node.name + '=' + node.value)
     if (this._isBuiltin(node)) {
-      node.stop();
-      node.start.apply(node, [from].concat(node.eval(this._nodes)));
+      node.update.apply(node, [from].concat(node.eval(this._nodes)));
     } else {
       node.value = node.eval(this._nodes);
       this._updateNodeChildren(node);
@@ -175,7 +187,7 @@ const Dataflow = new Lang.Class({
       let node = this._nodes[n];
       if (node.inputs.length >= 1)
         continue;
-      this._updateNode(node);
+      node.start.apply(node, node.eval(this._nodes));
     }
   },
   stop: function() {
