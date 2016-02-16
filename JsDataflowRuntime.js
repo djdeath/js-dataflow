@@ -161,6 +161,20 @@ const _builtins = {
       this.callback(this);
     },
   },
+  // If
+  "if": {
+    start: _nop,
+    stop: _nop,
+    update: function(from, value, val1, val2) {
+      if (value) {
+        this.value = val1;
+        this.callback(this);
+      } else if (arguments.length > 3) {
+        this.value = val2;
+        this.callback(this);
+      }
+    },
+  },
 };
 
 

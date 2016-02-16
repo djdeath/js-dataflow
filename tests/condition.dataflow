@@ -1,0 +1,4 @@
+t <- @timer(20)
+s <- Math.sin(t / 40) * 10
+c <- @if(s >= 0, s, 0)
+_ <- log(c)
