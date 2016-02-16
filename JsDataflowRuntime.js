@@ -36,7 +36,6 @@ const _builtins = {
         this.callback(this);
         return true;
       }.bind(this));
-      this.callback(this);
     },
     stop: function() {
       if (this._timeout) {
@@ -54,7 +53,6 @@ const _builtins = {
         this.value = object[property];
         this.callback(this);
       }.bind(this));
-      this.callback(this);
     },
     stop: function() {
       if (this._signal !== undefined) {
@@ -213,12 +211,20 @@ const Dataflow = new Lang.Class({
   // Graph helpers.
   start: function() {
     // Start all nodes without any input.
+    let toUpdate = [];
     for (let n in this._nodes) {
       let node = this._nodes[n];
       if (node.inputs.length >= 1)
         continue;
       node.start.apply(node, node.eval(this._nodes));
+      toUpdate.push(node);
     }
+    // Update children nodes of all started nodes.
+    for (let i = 0; i < toUpdate.length; i++) {
+      this._d('start ' + toUpdate[i].name);
+      this._updateNodeChildren(toUpdate[i]);
+    }
+    this._d('started...');
   },
   stop: function() {
     for (let n in this._nodes) {
