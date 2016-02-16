@@ -149,6 +149,18 @@ const _builtins = {
       this.callback(this);
     },
   },
+  // Counts
+  "count": {
+    start: _nop,
+    stop: _nop,
+    update: function(from, input) {
+      if (this.value === undefined)
+        this.value = 0;
+      else
+        this.value += 1;
+      this.callback(this);
+    },
+  },
 };
 
 
