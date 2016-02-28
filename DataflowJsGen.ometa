@@ -16,9 +16,18 @@ let DataflowJsGen = ometa {
   json     trans*:props                  -> ('({' + props.join(',') + '})'),
   binding  :name trans:val               -> (name.toProgramString() + ': ' + val),
 
+  when     trans:c trans:e               -> ['if(', c, ')return ', e, ';'].join(''),
+  else     trans:e                       -> ('return ' + e + ';'),
+  switch   trans*:xs                     -> xs.join(''),
+
+  nodeExpr = [:t (
+      ?(t == 'switch') apply(t):a -> a |
+      apply(t):a -> ('return ' + a + ';')
+                 ):ans ]                 -> ans,
+
   node = :e ?(!e.builtin)
-         trans(e.expr):c                 -> ['{name:', e.name.toProgramString(),
-                                             ',eval:function(nodes){return ', c, ';}',
+         nodeExpr(e.expr):c              -> ['{name:', e.name.toProgramString(),
+                                             ',eval:function(nodes){', c, '}',
                                              ',inputs:', this._toItemString(e.inputs),'}'].join(''),
 
   builtinArgs = [ trans*:xs ]            -> xs.join(','),

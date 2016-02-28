@@ -1,5 +1,7 @@
 let DataflowParser = ometa(BaseStrParser) {
-//  space        = ^space | fromToOrEnd('//', '\n'),
+  space        = ^space | fromToOrEnd('//', '\n'),
+
+  nonEmptyListOf :r :d = apply(r):f (apply(d) apply(r))*:rs  -> [f].concat(rs),
 
   // Strings:
   str          = spaces '\'' (~'\'' char)*:cs '\''           -> cs.join('')
@@ -56,8 +58,13 @@ let DataflowParser = ometa(BaseStrParser) {
                | str:s                                                    -> [#string, s]
                | "[" enum(#expr, ','):es "]"                              -> [#arr].concat(es),
 
+  condExpr     = "when" expr:c "->" expr:e                                -> [#when, c, e],
+  condExprs    = nonEmptyListOf(#condExpr, #space):cs "else" expr:e       -> [#switch].concat(cs).concat([[#else, e]])
+               | nonEmptyListOf(#condExpr, #space):cs                     -> [#switch].concat(cs)
+               | expr,
+
   // Propagations:
-  propagate    = name:n "<-" expr:e                                       -> [#propagate, n, e, @location],
+  propagate    = name:n "<-" condExprs:e                                  -> [#propagate, n, e, @location],
 
   program      = spaces (propagate:p spaces -> p)*:pp end                 -> [#program].concat(pp),
 };

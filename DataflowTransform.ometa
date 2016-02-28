@@ -26,6 +26,10 @@ let ExtractExpr = ometa {
   json     trans*:props                  -> [#json].concat(props),
   binding  :name trans:val               -> [#binding, name, val],
 
+  when     trans:c trans:e               -> [#when, c, e],
+  else     trans:e                       -> [#else, e],
+  switch   trans*:xs                     -> [#switch].concat(xs),
+
   builtin  :name :id trans*:args         -> [#get, '@' + id],
 
   propagate :name trans:x :l             -> [#propagate, name, x, l],
@@ -51,6 +55,10 @@ let ExtractInputs = ometa {
   json     trans*:props                  -> flatten1(props),
   binding  :name trans:val               -> val,
 
+  when     trans:c trans:e               -> c.concat(e),
+  else     trans:e                       -> e,
+  switch   trans*:xs                     -> flatten1(xs),
+
   builtin  :name :id trans*:args         -> ['@' + id],
 
   propagate :name trans:x :l             -> x,
@@ -75,6 +83,10 @@ let ExtractNodes = ometa {
   send     :msg trans:recv trans*:args   -> recv.concat(flatten1(args)),
   json     trans*:props                  -> flatten1(props),
   binding  :name trans:val               -> val,
+
+  when     trans:c trans:e               -> c.concat(e),
+  else     trans:e                       -> e,
+  switch   trans*:xs                     -> flatten1(xs),
 
   builtin  :name :id
            (anything:a
