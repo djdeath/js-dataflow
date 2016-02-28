@@ -257,12 +257,15 @@ const Dataflow = new Lang.Class({
       let node = this._nodes[n];
       if (node.inputs.length >= 1)
         continue;
-      node.start.apply(node, node.eval(this._nodes));
+      this._d('start ' + node.name);
+      if (node.builtin)
+        node.start.apply(node, node.eval(this._nodes));
+      else
+        node.value = node.eval(this._nodes);
       toUpdate.push(node);
     }
     // Update children nodes of all started nodes.
     for (let i = 0; i < toUpdate.length; i++) {
-      this._d('start ' + toUpdate[i].name);
       if (toUpdate[i].value !== undefined)
         this._updateNodeChildren(toUpdate[i]);
     }
