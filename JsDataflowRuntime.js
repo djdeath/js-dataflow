@@ -6,16 +6,12 @@ let translate = function(text) {
   try {
     let tree = Parser.DataflowParser.matchAll(text, 'program');
     let nodes = Parser.ExtractNodes.match(tree, 'trans');
-
-    //log('Nodes: ' + nodes.map(function(e) { return e.name; }));
-    let js = Parser.DataflowJsGen.createInstance();
-    js.setInput(nodes.map(function(e) { return e.name; }));
-
-    let ret = js.match(nodes, 'program');
-    //log(ret);
+    let ret = Parser.DataflowJsGen.match(
+      [nodes.map(function(e) { return e.name; }), nodes],
+      'Program');
     return ret;
   } catch (e) {
-    log('Error : ' + e.idx);
+    log('Error : ' + e + ' : ' + e.idx);
   }
 };
 
