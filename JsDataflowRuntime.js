@@ -241,8 +241,11 @@ const Dataflow = new Lang.Class({
     if (this._isBuiltin(node)) {
       node.update.apply(node, [from].concat(node.eval(this._nodes)));
     } else {
-      node.value = node.eval(this._nodes);
-      this._updateNodeChildren(node);
+      let value = node.eval(this._nodes);
+      if (value !== undefined) {
+        node.value = value
+        this._updateNodeChildren(node);
+      }
     }
   },
 
@@ -260,7 +263,8 @@ const Dataflow = new Lang.Class({
     // Update children nodes of all started nodes.
     for (let i = 0; i < toUpdate.length; i++) {
       this._d('start ' + toUpdate[i].name);
-      this._updateNodeChildren(toUpdate[i]);
+      if (toUpdate[i].value !== undefined)
+        this._updateNodeChildren(toUpdate[i]);
     }
     this._d('started...');
   },
