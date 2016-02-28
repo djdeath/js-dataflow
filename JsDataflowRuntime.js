@@ -58,6 +58,22 @@ const _builtins = {
     },
     update: _update,
   },
+  // Listens to a signal
+  "signal": {
+    start: function(object, signal) {
+      this._signal = object.connect(signal, function(obj, arg1) {
+        this.value = arg1;
+        this.callback(this);
+      }.bind(this));
+    },
+    stop: function() {
+      if (this._signal !== undefinied) {
+        object.disconnect(this._signal);
+        delete this._signal;
+      }
+    },
+    update: _update,
+  },
   // Throttles input to the rate of output changes.
   "throttle": {
     start: _nop,
