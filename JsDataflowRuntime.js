@@ -238,7 +238,7 @@ const Dataflow = new Lang.Class({
   },
   _updateNode: function(node, from) {
     this._d('update ' + node.name + '=' + node.value)
-    if (this._isBuiltin(node)) {
+    if (node.builtin) {
       node.update.apply(node, [from].concat(node.eval(this._nodes)));
     } else {
       let value = node.eval(this._nodes);
