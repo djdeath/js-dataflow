@@ -227,10 +227,46 @@ const Dataflow = new Lang.Class({
     }
   },
 
-  // Testing type of node.
-  _isBuiltin: function(node) {
-    return node.builtin !== undefined;
+  _visit: function(node) {
+    // Protect ourselves from loops in the graph.
+    if (this._toUpdate.visiting[node.name])
+      return;
+    this._toUpdate.visiting[node.name] = true;
+
+    if (this._toUpdate.order[node.name] !== undefined)
+      this._toUpdate.order[node.name] = Math.max(this._toUpdate.order[node.name],
+                                                 this._toUpdate.depth);
+    else
+      this._toUpdate.order[node.name] = this._toUpdate.depth;
+
+    this._toUpdate.depth += 1;
+    for (let i = 0; i < node.children.length; i++)
+      this._visit(this._nodes[node.children[i]]);
+    this._toUpdate.depth -= 1;
+
+    this._toUpdate.visiting[node.name] = false;
   },
+
+  // Figure out what nodes need to be updated and in what order from a given
+  // node.
+  _nodesToUpdate: function(root) {
+    this._toUpdate = {
+      visiting: {},
+      order: {},
+      depth: 0
+    };
+
+    this._visit(root);
+
+    let ret = Object.keys(this._toUpdate.order);
+    ret.sort(function(a, b) {
+      return this._toUpdate.order[a] - this._toUpdate.order[b];
+    }.bind(this));
+    this._d('Update order from ' + root.name + ' : ' + ret);
+
+    return JSON.stringify(this._toUpdate.order);
+  },
+
   _updateNodeChildren: function(node) {
     this._d('updated ' + node.name + '=' + node.value)
     for (let i = 0; i < node.children.length; i++)
