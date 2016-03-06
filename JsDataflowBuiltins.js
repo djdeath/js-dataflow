@@ -50,7 +50,7 @@ const Builtins = {
       }.bind(this));
     },
     stop: function() {
-      if (this._signal !== undefinied) {
+      if (this._signal !== undefined) {
         object.disconnect(this._signal);
         delete this._signal;
       }
