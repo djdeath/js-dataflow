@@ -25,6 +25,7 @@ const Builtins = {
       }
     },
     update: _update,
+    multipleEval: false,
   },
   // Listens to a property.
   "property": {
@@ -41,6 +42,7 @@ const Builtins = {
       }
     },
     update: _update,
+    multipleEval: false,
   },
   // Listens to a signal
   "signal": {
@@ -56,6 +58,7 @@ const Builtins = {
       }
     },
     update: _update,
+    multipleEval: false,
   },
   // Throttles input to the rate of output changes.
   "throttle": {
@@ -70,6 +73,7 @@ const Builtins = {
         return this._last;
       }
     },
+    multipleEval: true,
   },
   // Merge n inputs.
   "merge": {
@@ -78,6 +82,7 @@ const Builtins = {
     update: function(from) {
       return from.value;
     },
+    multipleEval: true,
   },
   "startsWith": {
     start: _nop,
@@ -91,6 +96,7 @@ const Builtins = {
         return input;
       }
     },
+    multipleEval: false, // TODO: we might need to reconsider this.
   },
   // Combines multiples conditions.
   "and": {
@@ -106,6 +112,7 @@ const Builtins = {
       }
       return false;
     },
+    multipleEval: false,
   },
   // Rate limits an input.
   "calm": {
@@ -134,6 +141,7 @@ const Builtins = {
       }.bind(this));
       return input;
     },
+    multipleEval: true,
   },
   // Counts
   "count": {
@@ -144,6 +152,7 @@ const Builtins = {
     update: function(from, input) {
       return this.value + 1;
     },
+    multipleEval: true,
   },
   // If
   "if": {
@@ -155,5 +164,6 @@ const Builtins = {
       else if (arguments.length > 3)
         return val2;
     },
+    multipleEval: false,
   },
 };

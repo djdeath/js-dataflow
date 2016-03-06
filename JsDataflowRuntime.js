@@ -31,6 +31,7 @@ const Dataflow = new Lang.Class({
         start: node.builtin ? Builtins[node.builtin].start : null,
         stop: node.builtin ? Builtins[node.builtin].stop : null,
         update: node.builtin ? Builtins[node.builtin].update : null,
+        multipleEval: node.builtin ? Builtins[node.builtin].multipleEval : false,
         callback: node.builtin ? this._updateNodesFromNode.bind(this) : null,
         inputs: node.inputs,
         value: undefined,
