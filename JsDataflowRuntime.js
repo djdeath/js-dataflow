@@ -77,15 +77,13 @@ const Dataflow = new Lang.Class({
   },
 
   _visitNodeInc: function(nodeData, parent) {
-    nodeData.parents.push(parent);
     nodeData.order = Math.max(nodeData.order,
                               this._toUpdate.depth);
-    nodeData.nb += 1;
-  },
 
-  _visitNodeDec: function(nodeData, parent) {
-    nodeData.parents.splice(parent);
-    nodeData.nb -= 1;
+    if (nodeData.parents.indexOf(parent) == -1) {
+      nodeData.parents.push(parent);
+      nodeData.nb += 1;
+    }
   },
 
   // Figure out what nodes need to be updated and in what order from a given
@@ -109,7 +107,7 @@ const Dataflow = new Lang.Class({
     }.bind(this));
 
     this._d('Update order from ' + startList.map(function(e) { return e.name; }) +
-            ' : ' + ret + ' / ' + JSON.stringify(this._toUpdate.nodes));
+            ' : ' + JSON.stringify(this._toUpdate.nodes));
 
     let ret = this._toUpdate;
     this._toUpdate = null;
@@ -124,11 +122,13 @@ const Dataflow = new Lang.Class({
     else
       value = node.eval(this._nodes);
 
+    this._d('\tupdate ' + node.name + '=' + value +
+            ' old=' + node.value +
+            ' (from ' + (from ? from.name : '-') + ')');
+
     if (value === undefined)
       return false;
 
-    this._d('\tupdate ' + node.name + '=' + value +
-            ' (from ' + (from ? from.name : '-') + ')');
     node.value = value
     return true;
   },
@@ -146,18 +146,31 @@ const Dataflow = new Lang.Class({
       if (toUpdate.nodes[node.name].nb < 1)
         continue;
 
+      let parents = toUpdate.nodes[node.name].parents;
+      if (toUpdate.nodes[node.name].nb != parents.length)
+        throw new Error('Fuck ' + node.name + ' nb=' + toUpdate.nodes[node.name].nb
+                        + parents.map(function(p) { return p.name; }));
+
       // Eval the right number of times based on the number of visit from a
       // depth-first algorithm.
-      let parents = toUpdate.nodes[node.name].parents;
       let forwardPropagation = true;
-      for (let j = 0; j < parents.length; j++)
-        forwardPropagation = this._updateNode(node, parents[j]);
+      if (node.multipleEval) {
+        for (let j = 0; j < parents.length; j++)
+          forwardPropagation = this._updateNode(node, parents[j]);
+      } else {
+        forwardPropagation = this._updateNode(node, parents[0]);
+      }
 
       // Stop propagation from this node if its value switched to undefined.
       if (!forwardPropagation) {
-        this._toUpdate = toUpdate;
-        this._visitNode = this._visitNodeDec;
-        this._visit(node, null);
+        for (let j = 0; j < node.children.length; j++) {
+          let child = this._nodes[node.children[j]];
+          let childData = toUpdate.nodes[child.name];
+          if (childData) {
+            childData.nb -= 1;
+            childData.parents.splice(childData.parents.indexOf(node), 1);
+          }
+        }
       }
     }
     this._toUpdate = null;
