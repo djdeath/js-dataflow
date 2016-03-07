@@ -1,3 +1,5 @@
+const Gdk = imports.gi.Gdk;
+const Gtk = imports.gi.Gtk;
 const Mainloop = imports.mainloop;
 const Utils = imports.Utils;
 
@@ -6,7 +8,11 @@ const DataflowRuntime = imports.JsDataflowRuntime;
 if (ARGV.length < 1)
   throw new Error('Need at least one argument');
 
-let z = 43;
+Gtk.init(null, null);
+
+let win = new Gtk.Window
+win.resize(800, 600);
+win.show();
 
 let toDataflow = function(text) {
   let code = DataflowRuntime.translate(text);
@@ -20,8 +26,9 @@ flow.start();
 
 Mainloop.timeout_add(2000, function() {
   log(JSON.stringify(flow.getValues()));
-  flow.stop();
-  Mainloop.quit('main');
+  //flow.stop();
+  //Mainloop.quit('main');
   return false;
 });
-Mainloop.run('main');
+//Mainloop.run('main');
+Gtk.main();
