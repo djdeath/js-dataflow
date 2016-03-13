@@ -198,6 +198,9 @@ const Dataflow = new Lang.Class({
         toUpdate.push(node);
     }
 
+    // TODO: we might need to look at nodes where a value has been set
+    // through setValues().
+
     // Update children nodes of all started nodes.
     this._updateNodesFromNodes(toUpdate);
     this._d('started...');
@@ -214,5 +217,12 @@ const Dataflow = new Lang.Class({
     for (let n in this._nodes)
       ret[n] = this._nodes[n].value;
     return ret;
-  }
+  },
+  setValues: function(map) {
+    for (let n in map) {
+      if (this._nodes[n] !== undefined) {
+        this._nodes[n].value = map[n];
+      }
+    }
+  },
 });
