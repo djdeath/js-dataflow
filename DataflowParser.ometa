@@ -8,7 +8,7 @@ let DataflowParser = ometa(BaseStrParser) {
                | spaces '"'  (~'"'  char)*:cs '"'            -> cs.join(''),
 
   // Numbers:
-  number       = spaces <digit+ ('.' digit+)?>:f                          -> parseFloat(f),
+  number       = spaces <digit+ ('.' digit+)?>:f             -> parseFloat(f),
 
   // Identifiers:
   nameFirst    = letter | '$' | '_',
