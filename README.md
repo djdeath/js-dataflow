@@ -20,8 +20,9 @@ TODO:
             e <- when a -> b
                  when c -> d
         }
-```
-  Obviously e can be evaluated when a and b or c and d are available.
+``` Obviously e can be evaluated when a and b or c and d are available.
+
+* Combine dataflows
 
 MAYBE:
 
