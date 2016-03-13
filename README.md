@@ -12,6 +12,8 @@ TODO:
 ```
 * A live editor, reparsing the dataflow, stopping the old one, save its
   values, load them into the new one and restart.
+* JS objects as values
+* Expression within strings (Ruby style, also ES6/7 might have this too)
 
 MAYBE:
 
