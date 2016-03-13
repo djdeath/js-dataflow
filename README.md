@@ -14,6 +14,14 @@ TODO:
   values, load them into the new one and restart.
 * JS objects as values
 * Expression within strings (Ruby style, also ES6/7 might have this too)
+* when blocks might need to be broken up :
+```javascript
+        dataflow {
+            e <- when a -> b
+                 when c -> d
+        }
+```
+  Obviously e can be evaluated when a and b or c and d are available.
 
 MAYBE:
 
