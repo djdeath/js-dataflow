@@ -15,9 +15,10 @@ win.resize(800, 600);
 win.show();
 
 let toDataflow = function(text) {
-  let code = DataflowRuntime.translate(text);
-  let params = eval('(function(){return ' + code + ';})()');
-  return new DataflowRuntime.Dataflow({ nodes: params, debug: true });
+  return new DataflowRuntime.Dataflow({ input: text,
+                                        debug: false,
+                                        eval: function(code) { return eval(code); }
+                                      });
 };
 
 let text = Utils.loadFile(ARGV[0]);

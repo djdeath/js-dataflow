@@ -1,6 +1,7 @@
 const Lang = imports.lang;
 const Parser = imports.Parser;
 const Builtins = imports.JsDataflowBuiltins.Builtins;
+const Utils = imports.Utils;
 
 let translate = function(text) {
   try {
@@ -21,8 +22,9 @@ const Dataflow = new Lang.Class({
   _init: function(args) {
     this._debug = args.debug;
     this._nodes = {};
-    for (let i = 0; i < args.nodes.length; i++) {
-      let node = args.nodes[i];
+    let nodes = args.eval(translate(args.input));
+    for (let i = 0; i < nodes.length; i++) {
+      let node = nodes[i];
       this._nodes[node.name] = {
         name: node.name,
         builtin: node.builtin,
@@ -35,8 +37,8 @@ const Dataflow = new Lang.Class({
       if (this._nodes[node.name].builtin)
         Utils.mergeProps(this._nodes[node.name], Builtins[node.builtin]);
     }
-    for (let i = 0; i < args.nodes.length; i++) {
-      let node = args.nodes[i];
+    for (let i = 0; i < nodes.length; i++) {
+      let node = nodes[i];
       for (let j = 0; j < node.inputs.length; j++)
         this._nodes[node.inputs[j]].children.push(node.name);
     }
