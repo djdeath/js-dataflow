@@ -62,7 +62,6 @@ const Builtins = {
   },
   // Throttles input to the rate of output changes.
   "throttle": {
-    start: _nop,
     stop: _nop,
     update: function(from, input, output) {
       let oldTrigger = this._lastTrigger;
@@ -77,15 +76,15 @@ const Builtins = {
   },
   // Merge n inputs.
   "merge": {
-    start: _nop,
     stop: _nop,
-    update: function(from) {
-      return from.value;
+    update: function(from, value) {
+      if (from)
+        return from.value;
+      return value;
     },
     multipleEval: true,
   },
   "startsWith": {
-    start: _nop,
     stop: _nop,
     update: function(from, input, initval) {
       if (!this._started) {
@@ -100,7 +99,6 @@ const Builtins = {
   },
   // Combines multiples conditions.
   "and": {
-    start: _nop,
     stop: _nop,
     update: function(from) {
       if (from) {
@@ -116,7 +114,6 @@ const Builtins = {
   },
   // Rate limits an input.
   "calm": {
-    start: _nop,
     stop: function() {
       if (this._timeout) {
         Mainloop.source_remove(this._timeout);
@@ -145,18 +142,15 @@ const Builtins = {
   },
   // Counts
   "count": {
-    start: function() {
-      this.value = 0;
-    },
     stop: _nop,
     update: function(from, input) {
-      return this.value + 1;
+      let count = (this.value !== undefined) ? this.value : 0;
+      return count + 1;
     },
     multipleEval: true,
   },
   // If
   "if": {
-    start: _nop,
     stop: _nop,
     update: function(from, condition, val1, val2) {
       if (condition)

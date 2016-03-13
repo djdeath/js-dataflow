@@ -28,14 +28,12 @@ const Dataflow = new Lang.Class({
         builtin: node.builtin,
         children: [],
         eval: node.eval,
-        start: node.builtin ? Builtins[node.builtin].start : null,
-        stop: node.builtin ? Builtins[node.builtin].stop : null,
-        update: node.builtin ? Builtins[node.builtin].update : null,
-        multipleEval: node.builtin ? Builtins[node.builtin].multipleEval : false,
         callback: node.builtin ? this._updateNodesFromNode.bind(this) : null,
         inputs: node.inputs,
         value: undefined,
       };
+      if (this._nodes[node.name].builtin)
+        Utils.mergeProps(this._nodes[node.name], Builtins[node.builtin]);
     }
     for (let i = 0; i < args.nodes.length; i++) {
       let node = args.nodes[i];

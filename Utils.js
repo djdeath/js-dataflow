@@ -55,3 +55,12 @@ let copyArrayRange = function(array, from, to) {
     ret[j++] = array[i];
   return ret;
 };
+
+let mergeProps = function(obj1, obj2) {
+    if (obj1 === undefined || obj1 === null)
+        obj1 = {};
+    for (let i in obj2) {
+	obj1[i] = obj2[i];
+    }
+    return obj1;
+};
