@@ -173,7 +173,6 @@ const Dataflow = new Lang.Class({
         }
       }
     }
-    this._toUpdate = null;
   },
 
   // Called by builtin nodes who want to update their value.
