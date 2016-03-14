@@ -34,7 +34,7 @@ let ExtractExpr = ometa {
 
   propagate :name trans:x :l             -> [#propagate, name, x, l],
 
-  program trans*:xs                      -> [#program].concat(xs),
+  dataflow trans*:xs                     -> [#dataflow].concat(xs),
 };
 
 let ExtractInputs = ometa {
@@ -63,7 +63,7 @@ let ExtractInputs = ometa {
 
   propagate :name trans:x :l             -> x,
 
-  program trans*:xs                      -> flatten1(xs),
+  dataflow trans*:xs                     -> flatten1(xs),
 };
 
 let ExtractNodes = ometa {
@@ -100,5 +100,5 @@ let ExtractNodes = ometa {
       ExtractExpr.trans(a):e
       trans(a):nodes :l                  -> [{ name: name, expr: e, inputs: i }].concat(nodes),
 
-  program trans*:xs                      -> flatten1(xs),
+  dataflow trans*:xs                     -> flatten1(xs),
 };

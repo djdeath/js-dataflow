@@ -37,10 +37,10 @@ let DataflowJsGen = ometa {
                                              ',eval:function(nodes){return [', args, '];}',
                                              ',inputs:', this._toItemString(e.inputs),'}'].join(''),
 
-  program = [ (node | builtin)*:ns ]     -> ('[' + ns.join(',\n') + ']'),
-  Program = [ :nodes
-              { this.setInput(nodes); }
-              program:p ]                -> p,
+  dataflow = [ (node | builtin)*:ns ]    -> ('[' + ns.join(',\n') + ']'),
+  Dataflow = [ :nodes
+               { this.setInput(nodes); }
+               dataflow:p ]              -> p,
 };
 DataflowJsGen._toItemString = function(inputs) {
   let items = {};

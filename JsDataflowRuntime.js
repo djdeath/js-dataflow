@@ -5,11 +5,11 @@ const Utils = imports.Utils;
 
 let translate = function(text) {
   try {
-    let tree = Parser.DataflowParser.matchAll(text, 'program');
+    let tree = Parser.DataflowParser.matchAll(text, 'grammar');
     let nodes = Parser.ExtractNodes.match(tree, 'trans');
     let ret = Parser.DataflowJsGen.match(
       [nodes.map(function(e) { return e.name; }), nodes],
-      'Program');
+      'Dataflow');
     return ret;
   } catch (e) {
     log('Error : ' + e + ' : ' + e.idx);
