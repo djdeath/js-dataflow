@@ -1,0 +1,10 @@
+let JSDataflowParser = ometa(JSParser) {
+  primExprHd = DataflowParser.grammar:r -> r
+             | ^primExprHd
+};
+
+let JSDataflowTranslator = ometa(JSTranslator) {
+  OMetaGrammar :sn :rules
+               BSOMetaOptimizer.optimizeGrammar([#Grammar, sn].concat(rules)):o
+               BSOMetaTranslator.trans([{}].concat(o))
+};
