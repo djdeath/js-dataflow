@@ -6,7 +6,7 @@ const Utils = imports.Utils;
 let translate = function(text) {
   try {
     let tree = Parser.DataflowParser.matchAll(text, 'grammar');
-    let nodes = Parser.ExtractNodes.match(tree, 'trans');
+    let nodes = Parser.DataflowExtractNodes.match(tree, 'trans');
     let ret = Parser.DataflowJsGen.match(
       [nodes.map(function(e) { return e.name; }), nodes],
       'Dataflow');

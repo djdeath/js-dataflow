@@ -66,7 +66,7 @@ let ExtractInputs = ometa {
   dataflow trans*:xs                     -> flatten1(xs),
 };
 
-let ExtractNodes = ometa {
+let DataflowExtractNodes = ometa {
   trans     = [:t apply(t):ans]          -> ans,
 
   number   :n                            -> [],
