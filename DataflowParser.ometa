@@ -66,7 +66,7 @@ let DataflowParser = ometa(BaseStrParser) {
   // Propagations:
   propagate    = name:n "<-" condExprs:e                                  -> [#propagate, n, e, @location],
 
-  grammar      = spaces (propagate:p spaces -> p)*:pp end                 -> [#dataflow].concat(pp),
+  grammar      = spaces (propagate:p spaces -> p)*:pp                     -> [#dataflow].concat(pp),
 };
 DataflowParser._uniqueId = function(base) {
   if (this._id === undefined)
