@@ -1,10 +1,13 @@
 let JSDataflowParser = ometa(JSParser) {
-  primExprHd = DataflowParser.grammar:r -> r
+  primExprHd = "dataflow" "{" DataflowParser.grammar:r "}" -> [#jsdataflow, r]
              | ^primExprHd
 };
 
 let JSDataflowTranslator = ometa(JSTranslator) {
-  OMetaGrammar :sn :rules
-               BSOMetaOptimizer.optimizeGrammar([#Grammar, sn].concat(rules)):o
-               BSOMetaTranslator.trans([{}].concat(o))
+  jsdataflow :d
+             DataflowExtractNodes.trans(d):ns
+             DataflowJsGen.Dataflow([ns.map(function(e) { return e.name; }), ns]):t
+             -> ['new imports.JsDataflowRuntime.Dataflow({ input:', t,
+                 ', debug: false',
+                 ', eval: function(code) { return eval(code); } })'].join('')
 };

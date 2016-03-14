@@ -1,9 +1,9 @@
-let BSJSParser = ometa(BaseStrParser) {
+let JSParser = ometa(BaseStrParser) {
   space        = ^space | fromTo('//', '\n') | fromTo('/*', '*/'),
   nameFirst    = letter | '$' | '_',
   nameRest     = nameFirst | digit,
   iName        = <nameFirst nameRest*>,
-  isKeyword :x = ?BSJSParser._isKeyword(x),
+  isKeyword :x = ?JSParser._isKeyword(x),
   name         = iName:n ~isKeyword(n)                                               -> [#name, n=='self' ? '$elf' : n],
   keyword      = iName:k isKeyword(k)                                                -> [k, k],
   hexDigit     = char:x {this.hexDigits.indexOf(x.toLowerCase())}:v ?(v >= 0)        -> v,
@@ -153,18 +153,18 @@ let BSJSParser = ometa(BaseStrParser) {
                | stmt,
   srcElems     = srcElem*:ss                                                         -> [#beginTop].concat(ss),
 
-  topLevel     = srcElems:r spaces end                                               -> r
+  grammar      = srcElems:r spaces end                                               -> r
 };
-BSJSParser.hexDigits = "0123456789abcdef";
-BSJSParser.keywords  = { };
+JSParser.hexDigits = "0123456789abcdef";
+JSParser.keywords  = { };
 keywords = ["break", "case", "catch", "continue", "default", "delete", "do", "else", "finally", "for", "function", "if", "in",
-            "instanceof", "new", "return", "switch", "this", "throw", "try", "typeof", "var", "void", "while", "with", "ometa", "let", "const"];
+            "instanceof", "new", "return", "switch", "this", "throw", "try", "typeof", "var", "void", "while", "with", "dataflow", "let", "const"];
 for (var idx = 0; idx < keywords.length; idx++)
-  BSJSParser.keywords[keywords[idx]] = true;
-BSJSParser._isKeyword = function(k) { return this.keywords.hasOwnProperty(k); };
+  JSParser.keywords[keywords[idx]] = true;
+JSParser._isKeyword = function(k) { return this.keywords.hasOwnProperty(k); };
 
 
-let BSJSTranslator = ometa {
+let JSTranslator = ometa {
   trans      = [:t apply(t):ans]     -> ans,
   curlyTrans = [#begin curlyTrans:r] -> r
              | [#begin trans*:rs]    -> ('{' + rs.join(';') + ';}')
@@ -223,12 +223,12 @@ let BSJSTranslator = ometa {
   case     trans:x trans:y                              -> ('case ' + x + ': '+ y),
   default          trans:y                              -> ('default: ' + y)
 };
-BSJSTranslator.genDestructId = function() {
+JSTranslator.genDestructId = function() {
   if (this._desctructId === undefined)
     this._desctructId = 0;
   return this._desctructId++;
 }
-BSJSTranslator.genDescructAssign = function(names, value) {
+JSTranslator.genDescructAssign = function(names, value) {
   let tmpName = '$_desc' + this.genDestructId();
   let ret = tmpName + '=' + value;
   for (let i = 0; i < names.length; i++)
